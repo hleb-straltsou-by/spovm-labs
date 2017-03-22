@@ -6,17 +6,31 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/stat.h>    //mkfile
+#include <semaphore.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
 
 struct processInfo {
     pid_t pid;
 };
 
 #define FIFO_NAME "/tmp/named_pipe"
+#define SEMAPHORE_NAME "/my_named_semaphore"
 
 #endif
 
 #include <iostream>
 using namespace std;
+
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <stdio.h>
+#include <semaphore.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 int main()
 {
@@ -25,28 +39,41 @@ int main()
 
     mkfifo(FIFO_NAME, 0600);
 
+    sem_t *mutex;
+    mutex = sem_open(SEMAPHORE_NAME,O_CREAT,0644,1);
+    if(mutex == SEM_FAILED)
+    {
+        perror("unable to create semaphore");
+        sem_unlink(SEMAPHORE_NAME);
+        return -1;
+    }
+
+
     struct processInfo processInfo_1;
-    pid_t pid_1 = fork();
-    processInfo_1.pid = pid_1;
-    switch(pid_1) {
-        case -1: {
-            cout << "Error, can not create student process" << endl;
-            return 0;
-        }
-        case 0: {
-            cout << "Student process has been created" << endl;
-            cout << "Student PID: " << getpid() << endl;
-            cout << "Host PID: " << getppid() << endl;
-            char* const argv[2] = {"empty", NULL};                                          //argv must not be NULL
-            execvp("/home/gleb/spovm/lab-1/student/build-student-Desktop-Debug/student", argv);
-            cout << "After execvp" << endl;
-            break;
-        }
-        default: {
-            cout << "Host process" << endl;
-            cout << "Student PID: " << processInfo_1.pid << endl;
-            cout << "Host PID: " << getpid() << endl;
-            break;
+    for(int i = 0; i < 3; i++)
+    {
+        pid_t pid_1 = fork();
+        processInfo_1.pid = pid_1;
+        switch(pid_1) {
+            case -1: {
+                cout << "Error, can not create student process" << endl;
+                return 0;
+            }
+            case 0: {
+                cout << "Student process has been created" << endl;
+                cout << "Student PID: " << getpid() << endl;
+                cout << "Host PID: " << getppid() << endl;
+                char* const argv[2] = {"empty", NULL};                                          //argv must not be NULL
+                execvp("/home/gleb/spovm/lab-1/student/build-student-Desktop-Debug/student", argv);
+                cout << "After execvp" << endl;
+                break;
+            }
+            default: {
+                cout << "Host process" << endl;
+                cout << "Student PID: " << processInfo_1.pid << endl;
+                cout << "Host PID: " << getpid() << endl;
+                break;
+            }
         }
     }
 
