@@ -1,24 +1,22 @@
 #ifdef __linux
-#include <iostream>
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/stat.h>    //mkfile
+#include <sys/stat.h>        //mkfile
 #include <student_linux.h>
 #include <semaphore.h>
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <fcntl.h>
-#include <linux/ipc.h>
-#include <linux/sem.h>
+#include <sys/ipc.h>
 #endif
 
 #ifdef WIN32 || WIN64
-#include<iostream>
 #include"Student_windows.h"
 #include<Windows.h>
 #include<conio.h>
 #endif
 
+#include<iostream>
 using namespace std;
 
 #define FIFO_NAME "/tmp/named_pipe"
@@ -27,6 +25,19 @@ using namespace std;
 int main()
 {
     #ifdef __linux
+
+    sem_t *mutex;
+
+    //create & initialize existing semaphore
+    mutex = sem_open(SEMAPHORE_NAME,0,0644,0);
+    if(mutex == SEM_FAILED)
+    {
+        perror("reader:unable to execute semaphore");
+        sem_close(mutex);
+        exit(-1);
+    }
+
+    sem_wait(mutex);
 
     Student_linux student;
     if(!student.connectToPipe(string(FIFO_NAME)))
@@ -41,6 +52,8 @@ int main()
     cout << "lol" << endl;
     student.completeLab(labs);
     student.closeConnectionToPipe();
+
+    sem_post(mutex);
 
     #endif
 
@@ -71,4 +84,3 @@ int main()
 
     return 0;
 }
-

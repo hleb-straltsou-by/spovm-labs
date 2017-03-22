@@ -3,6 +3,9 @@
 #include <sys/stat.h>
 #include <tutor_linux.h>
 #include <unistd.h>
+#include <semaphore.h>
+#include <sys/ipc.h>
+#include <fcntl.h>
 #endif
 
 #ifdef WIN32 || WIN64
@@ -20,6 +23,7 @@ using namespace std;
 int main()
 {
     #ifdef __linux
+
     vector<string> subjects;
     subjects.push_back("spovm");
     subjects.push_back("cpp");
@@ -27,7 +31,11 @@ int main()
     if(!tutor.connectToPipe(string(FIFO_NAME))){
         return -1;
     }
-    tutor.checkLabs();
+    for(int i = 0; i < 3; i++)
+    {
+        sleep(1);
+        tutor.checkLabs();
+    }
     tutor.closeConnectionToPipe();
     #endif
 
