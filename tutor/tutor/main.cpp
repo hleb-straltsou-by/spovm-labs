@@ -19,6 +19,7 @@
 using namespace std;
 
 #define FIFO_NAME "/tmp/named_pipe"
+#define STUDENTS_COUNT 3
 
 int main()
 {
@@ -28,12 +29,14 @@ int main()
     subjects.push_back("spovm");
     subjects.push_back("cpp");
     Tutor_linux tutor(subjects);
-    if(!tutor.connectToPipe(string(FIFO_NAME))){
+
+    if(!tutor.connectToPipe(string(FIFO_NAME))){    // try to connect to pipe
         return -1;
     }
-    for(int i = 0; i < 3; i++)
+    // check labs and wait for students
+    for(int i = 0; i < STUDENTS_COUNT; i++)
     {
-        sleep(1);
+        sleep(2);
         tutor.checkLabs();
     }
     tutor.closeConnectionToPipe();

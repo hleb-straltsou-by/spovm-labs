@@ -23,6 +23,7 @@ bool Student_linux::connectToPipe(string pipePath)
 
 void Student_linux::completeLab(vector<string> labList)
 {
+    // writing labs count to pipe
     char numberBuffer[BUFFER_SIZE];
     numberBuffer[0] = char(labList.size() + ZERO_CODE);
     numberBuffer[1] = '\0';
@@ -30,6 +31,7 @@ void Student_linux::completeLab(vector<string> labList)
     fputs(" ", this->pipe);
     for(int i = 0; i < labList.size(); i++)
     {
+        // writing lab size and its symbols to pipe
         numberBuffer[0] = char(labList[i].length() + ZERO_CODE);
         numberBuffer[1] = '\0';
         fputs(numberBuffer, this->pipe);
