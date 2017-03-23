@@ -26,9 +26,9 @@ int main()
 {
     #ifdef __linux
 
-    sem_t *mutex;
+    sem_t *mutex;                                       // declare semaphore structure
 
-    //create & initialize existing semaphore
+    // initialize existing semaphore
     mutex = sem_open(SEMAPHORE_NAME,0,0644,0);
     if(mutex == SEM_FAILED)
     {
@@ -37,22 +37,24 @@ int main()
         exit(-1);
     }
 
+    // waiting for access according semaphore logic,
+    // if semaphore is busy process will wait, while another process will hold it
     sem_wait(mutex);
 
-    Student_linux student;
-    if(!student.connectToPipe(string(FIFO_NAME)))
+    Student_linux student;                              // declare student object
+    if(!student.connectToPipe(string(FIFO_NAME)))       // try connect to pipe
     {
         return -1;
     }
 
     vector<string> labs;
-    labs.push_back("spovm");
+    labs.push_back("spovm");                            // uploading labs
     labs.push_back("apk");
     labs.push_back("cpp");
-    cout << "lol" << endl;
     student.completeLab(labs);
     student.closeConnectionToPipe();
 
+    // free semaphore for other processes
     sem_post(mutex);
 
     #endif

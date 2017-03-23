@@ -26,13 +26,13 @@ bool Tutor_linux::connectToPipe(string pipePath)
 
 void Tutor_linux::checkLabs()
 {
-    int labsCount = parseInteger();
+    int labsCount = parseInteger();                             // getting count of labs from student
     cout << "Tutor check " << labsCount << " labs" << endl;
     for(int i = 0; i < labsCount; i++)
     {
-        int symbolCount = parseInteger();
-        string lab = getStringFromPipe(symbolCount);
-        compareWithTutorSubjects(lab);
+        int symbolCount = parseInteger();                       // getting count of chars in labs name
+        string lab = getStringFromPipe(symbolCount);            // getting chars from students lab name
+        compareWithTutorSubjects(lab);                          // comparing with tutor's subjects
     }
 }
 
@@ -63,7 +63,7 @@ int Tutor_linux::parseInteger()
 
 string Tutor_linux::getStringFromPipe(int size)
 {
-    char readingBuffer[BUFFER_SIZE];
+    char readingBuffer[BUFFER_SIZE];            // work with pipe the same way as with simple file
     fgets(readingBuffer, size+1, pipe);
     fseek(pipe, -1, SEEK_CUR);
     return string(readingBuffer);

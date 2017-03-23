@@ -37,22 +37,24 @@ int main()
 
     #ifdef __linux
 
-    mkfifo(FIFO_NAME, 0600);
+    mkfifo(FIFO_NAME, 0600);                            // сreating pipe for communicating between student and tutor processes
 
-    sem_t *mutex;
-    mutex = sem_open(SEMAPHORE_NAME,O_CREAT,0644,1);
+    sem_t *mutex;                                       // declare semaphore structure
+    mutex = sem_open(SEMAPHORE_NAME,O_CREAT,0644,1);    // creating semaphore, 4th parameter - count of accesses at the same time.
     if(mutex == SEM_FAILED)
     {
         perror("unable to create semaphore");
-        sem_unlink(SEMAPHORE_NAME);
+        sem_unlink(SEMAPHORE_NAME);                     // destroying semaphore
         return -1;
     }
 
 
-    struct processInfo processInfo_1;
+    struct processInfo processInfo_1;                   // declare structure to store info of student process
+
+    // creating 3 students processes
     for(int i = 0; i < 3; i++)
     {
-        pid_t pid_1 = fork();
+        pid_t pid_1 = fork();                           // creating of new daughter process
         processInfo_1.pid = pid_1;
         switch(pid_1) {
             case -1: {
@@ -63,8 +65,8 @@ int main()
                 cout << "Student process has been created" << endl;
                 cout << "Student PID: " << getpid() << endl;
                 cout << "Host PID: " << getppid() << endl;
-                char* const argv[2] = {"empty", NULL};                                          //argv must not be NULL
-                execvp("/home/gleb/spovm/lab-1/student/build-student-Desktop-Debug/student", argv);
+                char* const argv[2] = {"empty", NULL};                                              // argv must not be NULL
+                execvp("/home/gleb/spovm/lab-1/student/build-student-Desktop-Debug/student", argv); // lunch student process
                 cout << "After execvp" << endl;
                 break;
             }
@@ -77,6 +79,7 @@ int main()
         }
     }
 
+    // creating tutor process
     struct processInfo processInfo_2;
     pid_t pid_2 = fork();
     processInfo_1.pid = pid_2;
@@ -89,8 +92,8 @@ int main()
         cout << "Student process has been created" << endl;
         cout << "Student PID: " << getpid() << endl;
         cout << "Host PID: " << getppid() << endl;
-        char* const argv[2] = {"empty", NULL};                                          //argv must not be NULL
-        execvp("/home/gleb/spovm/lab-1/tutor/build-tutor-Desktop-Debug/tutor", argv);
+        char* const argv[2] = {"empty", NULL};                                          // argv must not be NULL
+        execvp("/home/gleb/spovm/lab-1/tutor/build-tutor-Desktop-Debug/tutor", argv);   // lunch tutor process
         cout << "After execvp" << endl;
         break;
     }
