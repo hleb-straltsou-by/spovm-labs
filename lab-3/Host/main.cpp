@@ -32,10 +32,14 @@ using namespace std;
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define BUFFER_SIZE 1024
+
 int main()
 {
 
     #ifdef __linux
+
+    char buffer[BUFFER_SIZE] = "command line arguments";
 
     // creating tutor process
     struct processInfo processInfo_2;
@@ -50,8 +54,7 @@ int main()
         cout << "Tutor process has been created" << endl;
         cout << "Tutor PID: " << getpid() << endl;
         cout << "Host PID: " << getppid() << endl;
-        execvp("/home/gleb/spovm/labs/lab-1/lab-3/build-Tutor-Desktop-Debug/Tutor",
-              NULL);
+        execlp("/usr/bin/xterm", "xterm", "-e", "/home/gleb/spovm/labs/lab-1/lab-3/build-Tutor-Desktop-Debug/Tutor", buffer, NULL);
         cout << "After execlp" << endl;
         break;
     }
@@ -63,9 +66,11 @@ int main()
     }
    }
 
+    sleep(2);
+
     struct processInfo processInfo_1;                   // declare structure to store info of student process
     // creating students processes
-    for(int i = 0; i < 1; i++)
+    for(int i = 0; i < 2; i++)
     {
         pid_t pid_1 = fork();                           // creating of new daughter process
         processInfo_1.pid = pid_1;
@@ -78,8 +83,7 @@ int main()
                 cout << "Student process has been created" << endl;
                 cout << "Student PID: " << getpid() << endl;
                 cout << "Host PID: " << getppid() << endl;
-                execvp("/home/gleb/spovm/labs/lab-1/lab-3/build-Student-Desktop-Debug/Student",
-                      NULL);
+                execlp("/usr/bin/xterm", "xterm", "-e", "/home/gleb/spovm/labs/lab-1/lab-3/build-Student-Desktop-Debug/Student", buffer, NULL);
                 cout << "After execlp" << endl;
                 break;
             }
