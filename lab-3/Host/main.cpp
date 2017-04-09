@@ -1,3 +1,7 @@
+#ifdef WIN32 || WIN64
+#include"HostWindows.h"
+#endif
+
 #ifdef __linux
 #include <unistd.h>		//fork, getpid, getppid, execve
 #include <sys/types.h>	//pid_t
@@ -10,92 +14,74 @@
 #include <semaphore.h>
 #include <sys/wait.h>
 #include <sys/ipc.h>
-
-struct processInfo {
-    pid_t pid;
-};
-
-#define FIFO_NAME "/tmp/named_pipe"
-#define SEMAPHORE_NAME "/my_named_semaphore"
-
+#include "host.h"
+#include <sstream>
+#include "hostlinux.h"
 #endif
 
 #include <iostream>
+
 using namespace std;
 
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <stdio.h>
-#include <semaphore.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 
+#define CLIENT_INITIAL_SIZE 3
 #define BUFFER_SIZE 1024
+#define DEFAULT_LOG_FREQUENCY 4
+#define DEFAULT_CREATING_PERIODS 7
 
-int main()
+int parseStringToInt(char *stringNumber);
+
+int main(int argc, char** argv)
 {
+    int logFrequency;
+    int studentsCreatingPeriod;
+
+    if(argc <= 1){
+        printf("Illegal command line arguments. 1 - log frequency, 2 - period for creating students.\n");
+        printf("Will be used defaul params:\nlog frequency: 4 seconds\nperiod for creating students: 5 seconds\n");
+        logFrequency = DEFAULT_LOG_FREQUENCY;
+        studentsCreatingPeriod = DEFAULT_CREATING_PERIODS;
+    } else {
+        logFrequency = parseStringToInt(argv[1]);
+        studentsCreatingPeriod = parseStringToInt(argv[2]);
+    }
+
+    Host *host;
 
     #ifdef __linux
+    host = new HostLinux;
+    #endif
 
-    char buffer[BUFFER_SIZE] = "command line arguments";
+    #ifdef WIN32 || WIN64
+    host = new HostWindows;
+    #endif
 
-    // creating tutor process
-    struct processInfo processInfo_2;
-    pid_t pid_2 = fork();
-    processInfo_2.pid = pid_2;
-    switch(pid_2) {
-    case -1: {
-        cout << "Error, can not create tutor process" << endl;
-        return 0;
-    }
-    case 0: {
-        cout << "Tutor process has been created" << endl;
-        cout << "Tutor PID: " << getpid() << endl;
-        cout << "Host PID: " << getppid() << endl;
-        execlp("/usr/bin/xterm", "xterm", "-e", "/home/gleb/spovm/labs/lab-1/lab-3/build-Tutor-Desktop-Debug/Tutor", buffer, NULL);
-        cout << "After execlp" << endl;
-        break;
-    }
-    default: {
-        cout << "Host process" << endl;
-        cout << "Tutor PID: " << processInfo_2.pid << endl;
-        cout << "Host PID: " << getpid() << endl;
-        break;
-    }
-   }
+    host->createTutor(logFrequency);
 
     sleep(2);
 
-    struct processInfo processInfo_1;                   // declare structure to store info of student process
-    // creating students processes
-    for(int i = 0; i < 2; i++)
+    for(int i = 0; i < CLIENT_INITIAL_SIZE; i++)
     {
-        pid_t pid_1 = fork();                           // creating of new daughter process
-        processInfo_1.pid = pid_1;
-        switch(pid_1) {
-            case -1: {
-                cout << "Error, can not create student process" << endl;
-                return 0;
-            }
-            case 0: {
-                cout << "Student process has been created" << endl;
-                cout << "Student PID: " << getpid() << endl;
-                cout << "Host PID: " << getppid() << endl;
-                execlp("/usr/bin/xterm", "xterm", "-e", "/home/gleb/spovm/labs/lab-1/lab-3/build-Student-Desktop-Debug/Student", buffer, NULL);
-                cout << "After execlp" << endl;
-                break;
-            }
-            default: {
-                cout << "Host process" << endl;
-                cout << "Student PID: " << processInfo_1.pid << endl;
-                cout << "Host PID: " << getpid() << endl;
-                break;
-            }
-        }
+        host->createStudent();
     }
 
-    #endif
+    host->listenUserCommand();
+    host->createStudentWithPeriod(studentsCreatingPeriod);
+
 }
 
+int parseStringToInt(char *stringNumber)
+{
+    if(stringNumber == NULL)
+    {
+        return 0;
+    }
+    int length = strlen(stringNumber), result = 0, k = 1;
+    for(int i = length - 1; i >= 0; i--)
+    {
+        result += ((int)(stringNumber[i]) - 48) * k;
+        k *= 10;
+    }
+    return result;
+}
