@@ -9,7 +9,7 @@ public:
 
     ~Tutor();
 
-    virtual void start() = 0;
+    virtual void start(int logFrequency) = 0;
 
     virtual void end() = 0;
 

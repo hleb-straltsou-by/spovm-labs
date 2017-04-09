@@ -1,13 +1,24 @@
 #include "tutorlinux.h"
 
+pthread_mutex_t TutorLinux::mutex;
+
+vector<string> TutorLinux::subjects;
+
+StudentsQueue TutorLinux::studentsQueue;
+
 TutorLinux::TutorLinux() : Tutor()
-{}
+{
+    vector<string> subjects;
+    subjects.push_back("spovm");
+    subjects.push_back("cpp");
+    this->subjects = subjects;
+}
 
 TutorLinux::~TutorLinux()
 {}
 
-void TutorLinux::start()
-{
+void TutorLinux::start(int period)
+{    
     // create socket
     socketDesc = socket(AF_INET, SOCK_STREAM, 0);
     if(socketDesc == -1)
@@ -33,6 +44,17 @@ void TutorLinux::start()
     // set listening for connections from clients
     listen(socketDesc, 3);
 
+    // start logger
+    pthread_t thread;
+    int *periodPointer = (int*)malloc(1);
+    *periodPointer = period;
+    if(pthread_create(&thread, NULL, logStudents, (void*)periodPointer) < 0)
+    {
+        printf("Error! Cannot create thread to log active clients.\n");
+        return;
+    }
+    printf("Logger of students has been created.\n");
+
     // accept incoming connections form clients
     printf("Waiting for incoming connections from clients.\n");
     int socketAddressSize = sizeof(struct sockaddr_in);
@@ -47,7 +69,6 @@ void TutorLinux::start()
             printf("Error! Cannot create thread handler for client.\n");
             return;
         }
-
     }
 
     if(newSocket < 0)
@@ -57,9 +78,7 @@ void TutorLinux::start()
 }
 
 void TutorLinux::end()
-{
-
-}
+{}
 
 bool TutorLinux::createConnectionHandler(int* socket)
 {
@@ -75,31 +94,72 @@ bool TutorLinux::createConnectionHandler(int* socket)
 void* TutorLinux::handleConnection(void *socketDesc)
 {
     int socket = *(int*)socketDesc;
-    char clientMessage[BUFFER_SIZE], *serverMessage;
+    char clientMessage[BUFFER_SIZE], serverMessage[BUFFER_SIZE];
     int readSize;
+    string reply;
 
-    serverMessage = "Good afternoon, my favorite student, what do you want?\n";
+    TutorLinux::studentsQueue.addToEnd(socket);
+
+    pthread_mutex_lock(&TutorLinux::mutex);
+
+    reply = "Good afternoon, my favorite student, what labs do you want to complete?\n";
+    strcpy(serverMessage, reply.c_str());
     write(socket, serverMessage, strlen(serverMessage));
+
+    sleep(2);
 
     while((readSize = recv(socket, clientMessage, BUFFER_SIZE, 0)) > 0)
     {
-        printf("%s\n", clientMessage);
-        //serverMessage = "Server has been received client message.\n";
-        write(socket, clientMessage, strlen(clientMessage));
+        string lab = clientMessage;
+        if(checkLab(lab))
+        {
+            reply = lab + " lab is successfully taken! Good job, student!";
+            strcpy(serverMessage, reply.c_str());
+            write(socket, serverMessage, strlen(serverMessage));
+        } else {
+            reply = lab + " lab is not taken! Illegal name of subject!";
+            strcpy(serverMessage, reply.c_str());
+            write(socket, serverMessage, strlen(serverMessage));
+        }
         memset(&clientMessage, 0, sizeof(clientMessage));                           // clear clientMessage string
     }
 
     if(readSize == 0)
     {
-        cout << "Client has been disconnected.\n" << endl;
+        printf("Client has been disconnected.\n");
         fflush(stdout);
     }
     if(readSize == -1)
     {
-        cout << "Reading client message has been failed.\n" << endl;
+        printf("Reading client message has been failed.\n");
         fflush(stdout);
     }
 
     free(socketDesc);
+
+    TutorLinux::studentsQueue.remove(socket);
+
+    pthread_mutex_unlock(&TutorLinux::mutex);
 }
 
+ bool TutorLinux::checkLab(string lab)
+ {
+     for(unsigned int i = 0; i < TutorLinux::subjects.size(); i++)
+     {
+         if(lab == TutorLinux::subjects[i])
+         {
+             return true;
+         }
+     }
+     return false;
+ }
+
+void* TutorLinux::logStudents(void *period)
+{
+    int periodValue = *(int*)period;
+    while(true)
+    {
+        sleep(periodValue);
+        TutorLinux::studentsQueue.print();
+    }
+}

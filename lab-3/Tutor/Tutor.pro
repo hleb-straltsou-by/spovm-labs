@@ -5,11 +5,17 @@ CONFIG -= qt
 
 SOURCES += main.cpp \
     tutor.cpp \
-    tutorlinux.cpp
+    tutorlinux.cpp \
+    queue.cpp \
+    studentsqueue.cpp \
+    tutorwindows.cpp
 
 HEADERS += \
     tutor.h \
-    tutorlinux.h
+    tutorlinux.h \
+    queue.h \
+    studentsqueue.h \
+    tutorwindows.h
 
 QMAKE_LFLAGS += -pthread
 
