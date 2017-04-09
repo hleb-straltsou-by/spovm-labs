@@ -1,7 +1,11 @@
 #include "studentlinux.h"
 
 StudentLinux::StudentLinux() : Student()
-{}
+{
+    labList.push_back("spovm");
+    labList.push_back("apk");
+    labList.push_back("cpp");
+}
 
 StudentLinux::~StudentLinux()
 {}
@@ -42,7 +46,11 @@ void StudentLinux::sendMessage(string message)
 
 void StudentLinux::completeLabs()
 {
-
+    for(unsigned int i = 0; i < labList.size(); i++)
+    {
+        sendMessage(labList[i]);
+        cout << readMessage() << endl;
+    }
 }
 
 string StudentLinux::readMessage()
