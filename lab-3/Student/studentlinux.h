@@ -8,9 +8,9 @@
 #include <arpa/inet.h>      // inet_addr
 #include "student.h"
 
+#define NAME_SIZE 100
 #define BUFFER_SIZE 1024
-
-#define SOCKET_PORT 4021
+#define SOCKET_PORT 4025
 
 class StudentLinux : public Student
 {
@@ -19,6 +19,8 @@ private:
     int sock;
 
     struct sockaddr_in server;
+
+    vector<string> labList;
 
     char serverReply[BUFFER_SIZE];
 
@@ -39,6 +41,7 @@ public:
     string readMessage();
 
     void closeConnection();
+
 };
 
 #endif // STUDENTLINUX_H

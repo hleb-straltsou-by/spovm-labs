@@ -5,9 +5,11 @@ CONFIG -= qt
 
 SOURCES += main.cpp \
     student.cpp \
-    studentlinux.cpp
+    studentlinux.cpp \
+    studentwindows.cpp
 
 HEADERS += \
     student.h \
-    studentlinux.h
+    studentlinux.h \
+    studentwindows.h
 
